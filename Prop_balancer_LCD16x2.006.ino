@@ -8,6 +8,7 @@
 #define BALANCED_ACCEL 0.25       //Max acceleration permitted to consider prop balanced
 #define SAMPLES_ANGLE_AVG 600     //Samples taken to calculate angle average
 #define LCD_UPDATE_COUNT 200      //Main loop pases till the LCD is updated
+#define ACCEL_ADJ 0.001           //Acceleration adjust increment/decrement
 //
 //Initialize library object
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified();
@@ -58,7 +59,7 @@ ISR(TIMER1_CAPT_vect) {   //Input capture interrupt ISR
 
 void setup() {
   //Serial Port start
-  Serial.begin(9600);
+  //Serial.begin(9600);
   
   //TIMER 1 as input capture config
   //Prescaler -> /1, /8, /64, /256, /1024
@@ -88,7 +89,7 @@ void setup() {
   //ADXL345 initialization
   //Verify connection between sensor and controller
   if(!accel.begin()) {
-    Serial.println("The accel sensor didn't start!");
+    //Serial.println("The accel sensor didn't start!");
     while(1);
   }
   /* Set the data rate */
@@ -116,13 +117,13 @@ void loop() {
   //
   actualPeriod = TCNT1;
   if (actualAccel > maxAccel) {
-    maxAccel += 0.01;
+    maxAccel += ACCEL_ADJ;
     actualAngle = ((float)actualPeriod/(float)lastPeriod)*360;
     updateAngle();
   } else if (actualAccel > 0 && actualAccel < maxAccel) {
-    maxAccel -= 0.01;
+    maxAccel -= ACCEL_ADJ;
   } else if (actualAccel < 0 && abs(actualAccel) > maxAccel) {
-    maxAccel += 0.01;
+    maxAccel += ACCEL_ADJ;
     actualAngle = ((float)actualPeriod/(float)lastPeriod)*360;
     if (actualAngle >= 180) {
       actualAngle -= 180;  
@@ -131,7 +132,7 @@ void loop() {
     }
     updateAngle();
   } else if (actualAccel < 0 && abs(actualAccel) < maxAccel) {
-    maxAccel -= 0.01;
+    maxAccel -= ACCEL_ADJ;
   }
   //Serial.println(lastPeriod);
   
